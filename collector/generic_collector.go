@@ -37,9 +37,6 @@ type GenericCollector struct {
 
 	//holds information necessary to extract metrics
 	info *collectorInfo
-
-	// The Http client to use when connecting to metric endpoints
-	httpClient *http.Client
 }
 
 type collectorInfo struct {
@@ -55,7 +52,7 @@ type collectorInfo struct {
 }
 
 //Returns a new collector using the information extracted from the configfile
-func NewCollector(collectorName string, configFile []byte, metricCountLimit int, containerHandler container.ContainerHandler, httpClient *http.Client) (*GenericCollector, error) {
+func NewCollector(collectorName string, configFile []byte, metricCountLimit int, containerHandler container.ContainerHandler) (*GenericCollector, error) {
 	var configInJSON Config
 	err := json.Unmarshal(configFile, &configInJSON)
 	if err != nil {
@@ -105,7 +102,6 @@ func NewCollector(collectorName string, configFile []byte, metricCountLimit int,
 			regexps:             regexprs,
 			metricCountLimit:    metricCountLimit,
 		},
-		httpClient: httpClient,
 	}, nil
 }
 
@@ -138,7 +134,7 @@ func (collector *GenericCollector) Collect(metrics map[string][]v1.MetricVal) (t
 	nextCollectionTime := currentTime.Add(time.Duration(collector.info.minPollingFrequency))
 
 	uri := collector.configFile.Endpoint.URL
-	response, err := collector.httpClient.Get(uri)
+	response, err := http.Get(uri)
 	if err != nil {
 		return nextCollectionTime, nil, err
 	}

@@ -15,6 +15,8 @@
 package statsd
 
 import (
+        "strings"
+//        "github.com/golang/glog"
 	info "github.com/google/cadvisor/info/v1"
 	"github.com/google/cadvisor/storage"
 	client "github.com/google/cadvisor/storage/statsd/client"
@@ -31,12 +33,6 @@ type statsdStorage struct {
 
 const (
 	colCpuCumulativeUsage string = "cpu_cumulative_usage"
-	// CPU system
-	colCpuUsageSystem string = "cpu_usage_system"
-	// CPU user
-	colCpuUsageUser string = "cpu_usage_user"
-	// CPU average load
-	colCpuLoadAverage string = "cpu_load_average"
 	// Memory Usage
 	colMemoryUsage string = "memory_usage"
 	// Working set size
@@ -68,11 +64,6 @@ func (self *statsdStorage) containerStatsToValues(
 
 	// Cumulative Cpu Usage
 	series[colCpuCumulativeUsage] = stats.Cpu.Usage.Total
-
-	// Cpu usage
-	series[colCpuUsageSystem] = stats.Cpu.Usage.System
-	series[colCpuUsageUser] = stats.Cpu.Usage.User
-	series[colCpuLoadAverage] = uint64(stats.Cpu.LoadAverage)
 
 	// Memory Usage
 	series[colMemoryUsage] = stats.Memory.Usage
@@ -112,7 +103,16 @@ func (self *statsdStorage) AddStats(ref info.ContainerReference, stats *info.Con
 
 	var containerName string
 	if len(ref.Aliases) > 0 {
+                var hostname string
+		var image string
 		containerName = ref.Aliases[0]
+		hostname = strings.Replace(ref.Hostname, ".", "_", -1)
+                image = strings.Replace(ref.Image, ".", "_", -1)
+		image = strings.Replace(image, "/", ".", -1)
+                image = strings.Replace(image, ":", ".", -1)
+//		This isn't really the just the container name, rather it's the path up to and including the container name. This will be sent to graphite.
+                containerName = strings.Replace(containerName, ".", "_", -1)
+                containerName = hostname + "." + image + "." + containerName
 	} else {
 		containerName = ref.Name
 	}

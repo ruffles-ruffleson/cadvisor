@@ -5,6 +5,7 @@ package seccomp
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"syscall"
@@ -166,6 +167,7 @@ func matchCall(filter *libseccomp.ScmpFilter, call *configs.Syscall) error {
 	// Ignore it, don't error out
 	callNum, err := libseccomp.GetSyscallFromName(call.Name)
 	if err != nil {
+		log.Printf("Error resolving syscall name %s: %s - ignoring syscall.", call.Name, err)
 		return nil
 	}
 

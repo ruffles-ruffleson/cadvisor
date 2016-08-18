@@ -44,13 +44,10 @@ type PrometheusCollector struct {
 	// Limit for the number of scaped metrics. If the count is higher,
 	// no metrics will be returned.
 	metricCountLimit int
-
-	// The Http client to use when connecting to metric endpoints
-	httpClient *http.Client
 }
 
 //Returns a new collector using the information extracted from the configfile
-func NewPrometheusCollector(collectorName string, configFile []byte, metricCountLimit int, containerHandler container.ContainerHandler, httpClient *http.Client) (*PrometheusCollector, error) {
+func NewPrometheusCollector(collectorName string, configFile []byte, metricCountLimit int, containerHandler container.ContainerHandler) (*PrometheusCollector, error) {
 	var configInJSON Prometheus
 	err := json.Unmarshal(configFile, &configInJSON)
 	if err != nil {
@@ -91,7 +88,6 @@ func NewPrometheusCollector(collectorName string, configFile []byte, metricCount
 		configFile:       configInJSON,
 		metricsSet:       metricsSet,
 		metricCountLimit: metricCountLimit,
-		httpClient:       httpClient,
 	}, nil
 }
 
@@ -115,8 +111,7 @@ func getMetricData(line string) string {
 
 func (collector *PrometheusCollector) GetSpec() []v1.MetricSpec {
 	specs := []v1.MetricSpec{}
-
-	response, err := collector.httpClient.Get(collector.configFile.Endpoint.URL)
+	response, err := http.Get(collector.configFile.Endpoint.URL)
 	if err != nil {
 		return specs
 	}
@@ -162,7 +157,7 @@ func (collector *PrometheusCollector) Collect(metrics map[string][]v1.MetricVal)
 	nextCollectionTime := currentTime.Add(time.Duration(collector.pollingFrequency))
 
 	uri := collector.configFile.Endpoint.URL
-	response, err := collector.httpClient.Get(uri)
+	response, err := http.Get(uri)
 	if err != nil {
 		return nextCollectionTime, nil, err
 	}
