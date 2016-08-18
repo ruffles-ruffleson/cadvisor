@@ -2,7 +2,7 @@ package libcontainer
 
 import "io"
 
-// ErrorCode is the API error code type.
+// API error code type.
 type ErrorCode int
 
 // API error codes.
@@ -19,7 +19,7 @@ const (
 	ContainerNotPaused
 
 	// Process errors
-	NoProcessOps
+	ProcessNotExecuted
 
 	// Common errors
 	ConfigInvalid
@@ -49,14 +49,12 @@ func (c ErrorCode) String() string {
 		return "Console exists for process"
 	case ContainerNotPaused:
 		return "Container is not paused"
-	case NoProcessOps:
-		return "No process operations"
 	default:
 		return "Unknown error"
 	}
 }
 
-// Error is the API error type.
+// API Error type.
 type Error interface {
 	error
 
