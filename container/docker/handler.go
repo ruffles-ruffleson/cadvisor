@@ -101,9 +101,6 @@ type dockerContainerHandler struct {
 
 	// thin pool watcher
 	thinPoolWatcher *devicemapper.ThinPoolWatcher
-
-        // hostname
-        hostname string
 }
 
 var _ container.ContainerHandler = &dockerContainerHandler{}
@@ -297,7 +294,10 @@ func (h *dockerFsHandler) Usage() (uint64, uint64) {
 	if h.thinPoolWatcher != nil {
 		thinPoolUsage, err := h.thinPoolWatcher.GetUsage(h.deviceID)
 		if err != nil {
-			glog.Errorf("unable to get fs usage from thin pool for device %v: %v", h.deviceID, err)
+			// TODO: ideally we should keep track of how many times we failed to get the usage for this
+			// device vs how many refreshes of the cache there have been, and display an error e.g. if we've
+			// had at least 1 refresh and we still can't find the device.
+			glog.V(5).Infof("unable to get fs usage from thin pool for device %s: %v", h.deviceID, err)
 		} else {
 			baseUsage = thinPoolUsage
 			usage += thinPoolUsage
@@ -320,15 +320,9 @@ func (self *dockerContainerHandler) Cleanup() {
 }
 
 func (self *dockerContainerHandler) ContainerReference() (info.ContainerReference, error) {
-	dockerStatus, err := Status()
-        if err != nil {
-                glog.Warningf("Unable to connect to Docker: %v", err)
-        }
 	return info.ContainerReference{
 		Id:        self.id,
 		Name:      self.name,
-                Image:     self.image,
-		Hostname:  dockerStatus.Hostname,
 		Aliases:   self.aliases,
 		Namespace: DockerNamespace,
 		Labels:    self.labels,
