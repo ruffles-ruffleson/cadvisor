@@ -78,6 +78,12 @@ type ContainerReference struct {
 	// The absolute name of the container. This is unique on the machine.
 	Name string `json:"name"`
 
+	// Image name
+        Image string `json:"image,omitempty"`
+
+	// Hostname
+	Hostname string `json:"hostname"`
+
 	// Other names by which the container is known within a certain namespace.
 	// This is unique within that namespace.
 	Aliases []string `json:"aliases,omitempty"`

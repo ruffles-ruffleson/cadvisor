@@ -101,6 +101,9 @@ type dockerContainerHandler struct {
 
 	// thin pool watcher
 	thinPoolWatcher *devicemapper.ThinPoolWatcher
+
+        // hostname
+        hostname string
 }
 
 var _ container.ContainerHandler = &dockerContainerHandler{}
@@ -317,9 +320,15 @@ func (self *dockerContainerHandler) Cleanup() {
 }
 
 func (self *dockerContainerHandler) ContainerReference() (info.ContainerReference, error) {
+	dockerStatus, err := Status()
+        if err != nil {
+                glog.Warningf("Unable to connect to Docker: %v", err)
+        }
 	return info.ContainerReference{
 		Id:        self.id,
 		Name:      self.name,
+                Image:     self.image,
+		Hostname:  dockerStatus.Hostname,
 		Aliases:   self.aliases,
 		Namespace: DockerNamespace,
 		Labels:    self.labels,
